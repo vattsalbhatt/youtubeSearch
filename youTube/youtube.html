@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      #searchResults {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        /* text-align: center; */
+        justify-content: space-around;
+      }
+
+      #nav {
+        width: 100%;
+        height: 60px;
+        /* border: 1px solid red; */
+        background-color: black;
+        color: white;
+        text-align: center;
+        display: flex;
+        /* position: fixed; */
+        /* margin-bottom: 50px; */
+      }
+      input {
+        margin-top: 13px;
+        margin-left: 250px;
+        background-color: black;
+        color: white;
+        border: 1px solid white;
+        width: 30%;
+        height: 30px;
+        border-radius: 8px;
+      }
+      button {
+        margin-top: 15px;
+        margin-left: 10px;
+        background-color: rgb(80, 78, 78);
+        color: white;
+        width: 100px;
+        height: 30px;
+        border-radius: 8px;
+      }
+      #logo {
+        width: 15%;
+        height: 40px;
+        /* border: 1px solid white; */
+      }
+      #logo > img {
+        margin-top: 15px;
+        width: 80%;
+        height: 80%;
+        object-fit: contain;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="nav">
+      <div id="logo">
+        <img
+          src="https://pnggrid.com/wp-content/uploads/2021/04/youtube-white-1024x230.png"
+          alt=""
+        />
+      </div>
+      <input type="text" id="video" placeholder="  search any video" />
+      <button onclick="searchVideo()">Search</button>
+    </div>
+    <div id="preSearchResults"></div>
+    <div id="searchResults"></div>
+  </body>
+</html>
+<script>
+  // const api =
+
+  let youtubeObj = JSON.parse(localStorage.getItem("video")) || [];
+  let searchQuery = JSON.parse(localStorage.getItem("searchQuery")) || [];
+  console.log("searchQuery:", searchQuery);
+  let lastSearch = searchQuery[searchQuery.length - 1];
+  //   " https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=tesla&type=video&key=AIzaSyAnYJW6YJ3vvrwHNtKNxHItUr3an0s4kgY";
+  const resultDiv = document.getElementById("searchResults");
+  const apiKey = "AIzaSyC54Py0HGk_-SlxFZozgLr-4S1TZ0am07g";
+  // "AIzaSyBGXZfyFNBEpuk4DpZqb2xvbz-k0YCBzb8";
+  // "AIzaSyBjQ_ajBcRi90yo2EUfCXCdbl9kqT81yDg";
+  // "AIzaSyAnYJW6YJ3vvrwHNtKNxHItUr3an0s4kgY";
+
+  //PreSearch By Default Query
+  let presearchVideo = async () => {
+    try {
+      let response = await fetch(
+        `https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=12&regionCode=IN&type=video&key=${apiKey}&q=${lastSearch}}`
+      );
+      let video = await response.json();
+      console.log("video:", video);
+      let videos = video.items;
+      console.log(videos);
+      appendVideos(videos);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  presearchVideo(); // Calling & displaying the stuff
+
+  //New function for search Query
+  let searchVideo = async () => {
+    try {
+      let videoQuery = document.getElementById("video").value;
+      let response = await fetch(
+        `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=${videoQuery}&type=video&key=${apiKey}&maxResults=20`
+      );
+      let video = await response.json();
+      let videos = video.items;
+      console.log(videos);
+      appendVideos(videos);
+      appendSearchQuery(videoQuery);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  let appendSearchQuery = (x) => {
+    searchQuery.push(x);
+    console.log(searchQuery);
+    localStorage.setItem("searchQuery", JSON.stringify(searchQuery));
+  };
+
+  //Same function for 2 query 1. default 2. search query
+  const appendVideos = (videos) => {
+    document.querySelector("#searchResults").innerHTML = null;
+    videos.forEach((elem) => {
+      let {
+        id: { videoId },
+      } = elem;
+      // console.log("videoId:", videoId);
+
+      let show = document.createElement("div");
+      let img = document.createElement("img");
+      img.src = elem.snippet.thumbnails.medium.url;
+      img.addEventListener("click", () => {
+        playVideo(elem);
+      });
+      let title = document.createElement("p");
+      title.textContent = elem.snippet.title;
+      // console.log("img.src:", img.src);
+      show.append(img);
+      let mainDiv = document.createElement("div");
+      let smallDiv = document.createElement("div");
+      smallDiv.append(title);
+      mainDiv.append(img, smallDiv);
+      document.querySelector("#searchResults").append(mainDiv);
+    });
+  };
+
+  // storing data and sending to a particular videoId
+  let playVideo = (elem) => {
+    console.log("play");
+    youtubeObj.push(elem);
+    console.log(youtubeObj);
+    localStorage.setItem("video", JSON.stringify(youtubeObj));
+    window.location.href = "ytVideo.html";
+  };
+</script>
